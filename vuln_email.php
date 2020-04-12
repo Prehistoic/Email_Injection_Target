@@ -1,24 +1,11 @@
-<?php
-	if(isset($_POST['from'])) {
-		$to = "mat.lac702@gmail.com";
-		$from = $_POST['from'];
-		$subject = $_POST['subject'];
-	 	$message = $_POST['message'];
-	 	$headers = "From: $from\n";
-
-	 	mail($to, $subject, $message, $headers);
-	}
-?>
-
 <html>
 	<head>
-		<meta charset="utf-8"/>
 		<title>Vulnerable contact page</title>
 		<link rel="stylesheet" href="email.css"/>
 	</head>
 
 	<body>
-		<form method="POST" action="">
+		<form method="POST" action="<?=$_SERVER['PHP_SELF'];?>">
 			<fieldset>
 				<legend>Send us a mail</legend>
 
@@ -36,5 +23,18 @@
 				<input type="reset" value="Cancel"/>
 			</p>
 		</form>
+
+		<?php
+		if(isset($_POST['from'])) {
+			$to = "mat.lac702@gmail.com";
+			$from = urldecode($_POST['from']);
+			$subject = $_POST['subject'];
+		 	$message = $_POST['message'];
+		 	$headers = "From: $from\n";
+		 	
+		 	mail($to, $subject, $message, $headers);
+		}
+
+		 ?>
 	</body>
 </html>
