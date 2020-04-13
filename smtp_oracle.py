@@ -7,7 +7,7 @@ import email
 
 url = 'http://127.0.0.1:80/vuln_email.php'
 FROM_EMAIL = 
-FROM_PWD =
+FROM_PWD = 
 SMTP_SERVER = "imap.gmail.com"
 SMTP_PORT = 993
 
@@ -29,7 +29,7 @@ def readmail():
     except Exception, e:
         print str(e)
 
-def main(p_from,subject,message):
+def main(subject,message,p_from):
     data = {"from":p_from, "subject":subject, "message":message}
     response = requests.post(url,data=data)
     if(response.status_code != 200):
@@ -41,4 +41,4 @@ if __name__=="__main__":
     if(len(sys.argv) == 4):
         main(sys.argv[1],sys.argv[2],sys.argv[3])
     else:
-        print("Usage: python smtp_oracle.py [from] [subject] [message]")
+        print("Usage: python smtp_oracle.py [subject] [message] [from]")
