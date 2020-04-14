@@ -2,307 +2,114 @@ grammar mime;
 
 axiom: s EOF;
 
-s: mime_message_headers;
+s: fields (CRLF body)?;
+
+body: phrase (CRLF phrase)* CRLF?;
 
 
-/* MIME specifications */
+// Primitive tokens
 
-attribute: token;
+atom: TEXT;
 
-composite_type: 'message' | 'multipart' | extension_token;
+dot_atom: atom ('.' atom)*;
 
-content: 'Content-Type' ':' type | subtype (';' parameter)*;
-
-description: 'Content-Description' ':' text*;
-
-discrete_type: 'text' | 'image' | 'audio' | 'video' | 'application' | extension_token;
-
-encoding: 'Content-Transfer-Encoding' ':' mechanism;
-
-entity_headers: (content CRLF)? (encoding CRLF)? (id CRLF)? (description CRLF)? CRLF;
-
-extension_token: x_token;
-
-hex_octet: '=' (DIGIT | [A-F]){2};
-
-id: 'Content-ID' ':' msg_id;
-
-mechanism: '7bit' | '8bit' | 'binary' | 'quoted-printable' | 'base64' | x_token;
-
-mime_message_headers: entity_headers fields version CRLF;
-
-parameter: attribute '=' value;
-
-ptext: hex_octet | safe_char;
-
-qp_line: (qp_segment transport_padding CRLF)* qp_part transport_padding;
-
-qp_part: qp_section;
-
-qp_section: ((ptext | SP | TAB)* ptext)?;
-
-qp_segment: qp_section (SP | TAB)* '=';
-
-quoted_printable: qp_line (CRLF qp_line)*;
-
-safe_char: '\u0021'..'\u003c' | '\u003e'..'\u007e';
-
-subtype: extension_token;
-
-token: safe_char+;
-
-transport_padding: LWSP;
-
-type: discrete_type | composite_type;
-
-value: token | quoted_string;
-
-version: 'MIME-Version' ':' DIGIT+ '.' DIGIT+;
-
-x_token: ('X-'|'x-') token;
+phrase: atom (FWS atom)*;
 
 
-/* Primitive tokens */
+// Date specs
 
-NO_WS_CTL: '\u0001'..'\u0008' | '\u000b' | '\u000c' | '\u000e'..'\u001f' | '\u007f';
-
-text: '\u0001'..'\u0009' | '\u000b'..'\u007e';
-
-quoted_pair: [\\] text;
-
-FWS: (WSP* CRLF)? WSP+;
-
-ctext: NO_WS_CTL | '\u0021'..'\u0027' | '\u002a'..'\u005b' | '\u005d'..'\u007e';
-
-ccontent: ctext | quoted_pair | comment;
-
-comment: '(' (FWS? ccontent)* FWS? ')';
-
-CFWS: (FWS? comment)* (FWS? comment | FWS);
-
-atext: ALPHA | DIGIT | '!' | '#' | '$' | '%' | '&' | QUOTE | '*' | '+' | '-' | '/' | '=' | '?' | '^' | '_' | '`' | '{' | '}' | '|' | '~';
-
-atom: CFWS? atext+ CFWS?;
-
-dot_atom: CFWS? dot_atom_text CFWS?;
-
-dot_atom_text: atext+ ('.' atext)*;
-
-qtext: NO_WS_CTL | '\u0021' | '\u0023'..'\u005b' | '\u00d5'..'\u007e';
-
-qcontent: qtext | quoted_pair;
-
-quoted_string: CFWS? DQUOTE (FWS? qcontent)* FWS? DQUOTE CFWS?;
-
-word: atom | quoted_string;
-
-phrase: word+;
-
-utext: NO_WS_CTL | '\u0021'..'\u007e';
-
-unstructured: (FWS? utext)* FWS?;
-
-
-
-/* Date specifications */
-
-date_time: (day_of_week ',')? date FWS time CFWS?;
-
-day_of_week: FWS? day_name;
+date_time: day_name ',' FWS day_number FWS month_name FWS year FWS time;
 
 day_name: 'Mon' | 'Tue' | 'Wed' | 'Thu' | 'Fri' | 'Sat' | 'Sun';
 
-date: day month year;
-
-year: DIGIT{4};
-
-month: FWS month_name FWS;
-
 month_name: 'Jan' | 'Feb' | 'Mar' | 'Apr' | 'May' | 'Jun' | 'Jul' | 'Aug' | 'Sep' | 'Oct' | 'Nov' | 'Dec';
 
-day: FWS? DIGIT{1,2};
+day_number: C_NUMBER;
 
-time: time_of_day FWS zone;
+year: Q_NUMBER;
 
-time_of_day: hour ':' minute (':' second)?;
+time: hour ':' minute (':' second)? FWS ('+'|'-') zone;
 
-hour: DIGIT{2};
+zone: Q_NUMBER FWS '(' UPPER_CHARS ')';
 
-minute: DIGIT{2};
+hour: D_NUMBER;
 
-second: DIGIT{2};
+minute: D_NUMBER;
 
-zone: ('+'|'-') DIGIT{4};
+second: D_NUMBER;
 
 
-/* Address specification */
 
-address: mailbox | group;
+// Address specs
 
-mailbox: name_addr | addr_spec;
+address: name_addr | addr_spec;
 
 name_addr: display_name? angle_addr;
 
-angle_addr: CFWS? '<' addr_spec '>' CFWS?;
-
-group: display_name ':' (mailbox_list | CFWS)? ';' CFWS?;
+angle_addr: FWS? '<'  addr_spec '>';
 
 display_name: phrase;
 
-mailbox_list: mailbox (',' mailbox)*;
-
-address_list: address (',' address)*;
-
 addr_spec: local_part '@' domain;
 
-local_part: dot_atom | quoted_string;
+local_part: dot_atom;
 
-domain: dot_atom | domain_literal;
+domain: dot_atom;
 
-domain_literal: CFWS? '[' (FWS? dcontent)* FWS? ']' CFWS?;
+address_list: address (',' FWS? address)*;
 
-dcontent: dtext | quoted_pair;
 
-dtext: NO_WS_CTL | '\u0021'..'\u005a' | '\u005e'..'\u007e';
 
+// Fields specs
 
-/* Overall message syntax */
+fields: (return_path | received | orig_date | r_from | google_from | to | cc | bcc | message_id | subject)*;
 
-message: fields (CRLF body)?;
+return_path: 'Return-Path:' angle_addr CRLF;
 
-body: (text* CRLF)* text*;
+received: 'Received:' FWS? RECEIVED_CONTENT ';' CRLF? date_time CRLF;
 
+orig_date: 'Date:' FWS? date_time CRLF;
 
-/* Fields definition */
+r_from: 'From:' FWS? address_list CRLF;
 
-fields: (trace (resent_date | resent_from | resent_sender | resent_to | resent_cc | resent_bcc | resent_msg_id)*)* (orig_date | r_from | sender | reply_to | to | cc | bcc | message_id | in_reply_to | references | subject | comments | keywords | optional_field)*;
+google_from: 'X-Google-Original-From:' FWS? address_list CRLF;
 
-orig_date: 'Date:' date_time CRLF;
+to: 'To:' FWS? address_list CRLF;
 
-r_from: 'From:' mailbox_list CRLF;
+cc: 'Cc:' FWS? address_list CRLF;
 
-sender: 'Sender:' mailbox CRLF;
+bcc: 'Bcc:' FWS? address_list CRLF;
 
-reply_to: 'Reply-To:' address_list CRLF;
+message_id: 'Message-ID:' FWS? msg_id CRLF;
 
-to: 'To:' address_list CRLF;
+msg_id: '<' dot_atom '@' dot_atom '>';
 
-cc: 'Cc:' address_list CRLF;
+subject: 'Subject:' FWS? phrase CRLF;
 
-bcc: 'Bcc' (address_list | CFWS?) CRLF;
 
-message_id: 'Message-ID:' msg_id CRLF;
 
-in_reply_to: 'In-Reply-To:' msg_id+ CRLF;
+// Lexer rules
 
-references: 'References:' msg_id+ CRLF;
+fragment DIGIT: [0-9];
 
-msg_id: CFWS? '<' id_left '@' id_right '>' CFWS?;
+D_NUMBER: DIGIT DIGIT;
 
-id_left: dot_atom_text | no_fold_quote;
+Q_NUMBER: DIGIT DIGIT DIGIT DIGIT;
 
-id_right: dot_atom_text | no_fold_literal;
+C_NUMBER: DIGIT | DIGIT DIGIT;
 
-no_fold_quote: DQUOTE (qtext | quoted_pair)* DQUOTE;
+UPPER_CHARS: [A-Z]+;
 
-no_fold_literal: '[' (dtext | quoted_pair)* ']';
+fragment CR: '%0A';
 
-subject: 'Subject:' unstructured CRLF;
+fragment LF: '%0D';
 
-comments: 'Comments:' unstructured CRLF;
+fragment SP: '%20';
 
-keywords: 'Keywords:' phrase (',' phrase)* CRLF;
+RECEIVED_CONTENT: [^;]+;
 
-resent_date: 'Resent-Date:' date_time CRLF;
+CRLF: CR;
 
-resent_from: 'Resent-From:' mailbox_list CRLF;
+TEXT: [a-zA-Z0-9\-_]+;
 
-resent_sender: 'Resent-Sender:' mailbox CRLF;
-
-resent_to: 'Resent-To:' address_list CRLF;
-
-resent_cc: 'Resent-Cc:' address_list CRLF;
-
-resent_bcc: 'Resent-Bcc:' (address_list | CFWS?) CRLF;
-
-resent_msg_id: 'Resent-Message-ID:' msg_id CRLF;
-
-trace: r_return? received+;
-
-r_return: 'Return-Path:' path CRLF;
-
-path: (CFWS? '<' (CFWS? | addr_spec) '>' CFWS?;
-
-received: 'Received:' name_val_list ';' date_time CRLF;
-
-name_val_list: CFWS? (name_val_pair (CFWS name_val_pair)*)?;
-
-name_val_pair: item_name CFWS item_value;
-
-item_name: ALPHA ([-]? (ALPHA|DIGIT))*;
-
-item_value: angle_addr+ | addr_spec | atom | domain | msg_id;
-
-optional_field: field_name ':' unstructured CRLF;
-
-field_name: ftext+;
-
-ftext: '\u0021'..'\u0039' | '\u003b'..'\u007e';
-
-
-/* Les fragments de base */
-
-DIGIT: [0-9];
-
-ALPHA: [a-zA-Z];
-
-QUOTE: ["];
-
-DQUOTE: ['];
-
-LWSP: (WSP | CRLF WSP)*;
-
-WSP: SP | TAB;
-
-CRLF: CR LF;
-
-CR: '\u000d';
-
-LF: '\u000a';
-
-SP: '\u0020';
-
-TAB: '\u0009';
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+FWS: SP;
