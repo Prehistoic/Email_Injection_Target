@@ -6,8 +6,8 @@ import imaplib
 import email
 
 url = 'http://127.0.0.1:80/vuln_email.php'
-FROM_EMAIL = 
-FROM_PWD = 
+FROM_EMAIL = 'mat.lac702@gmail.com'
+FROM_PWD = 'Zi42ma36u45a83Zua'
 SMTP_SERVER = "imap.gmail.com"
 SMTP_PORT = 993
 
