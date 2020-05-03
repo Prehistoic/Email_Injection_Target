@@ -11,6 +11,9 @@ FROM_PWD =
 SMTP_SERVER = "imap.gmail.com"
 SMTP_PORT = 993
 
+# Je n'utilise plus cette fonction, elle était là pour la phase de test de l'oracle.
+# Elle permet d'afficher le contenu du dernier mail envoyé dans le format spécifié dans le RFC 822 (le RFC 2822 que j'utilise
+# pour ma grammaire est une version mise à jour du 822).
 def readmail():
     try:
         mail = imaplib.IMAP4_SSL(SMTP_SERVER)
@@ -30,8 +33,11 @@ def readmail():
         print str(e)
 
 def main(subject,message,p_from):
+    # Création d'un dictionnaire contenant les paramètres nécessaire pour le formulaire
     data = {"from":p_from, "subject":subject, "message":message}
+    # Envoi de la requête POST
     response = requests.post(url,data=data)
+    # Monitoring du status code de la réponse
     if(response.status_code != 200):
         exit(180)
 
