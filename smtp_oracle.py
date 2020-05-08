@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 import requests
 import sys
 import smtplib
@@ -5,9 +7,8 @@ import time
 import imaplib
 import email
 
-url = 'http://127.0.0.1:80/vuln_email.php'
-FROM_EMAIL = 'mat.lac702@gmail.com'
-FROM_PWD = 'Zi42ma36u45a83Zua'
+FROM_EMAIL = "complete with your email"
+FROM_PWD = "complete with your password"
 SMTP_SERVER = "imap.gmail.com"
 SMTP_PORT = 993
 
@@ -32,7 +33,7 @@ def readmail():
     except Exception, e:
         print str(e)
 
-def main(subject,message,p_from):
+def main(url,subject,message,p_from):
     # Création d'un dictionnaire contenant les paramètres nécessaire pour le formulaire
     data = {"from":p_from, "subject":subject, "message":message}
     # Envoi de la requête POST
@@ -44,7 +45,7 @@ def main(subject,message,p_from):
     exit(0)
 
 if __name__=="__main__":
-    if(len(sys.argv) == 4):
-        main(sys.argv[1],sys.argv[2],sys.argv[3])
+    if(len(sys.argv) == 5):
+        main(sys.argv[1],sys.argv[2],sys.argv[3],sys.argv[4])
     else:
-        print("Usage: python smtp_oracle.py [subject] [message] [from]")
+        print("Usage: python smtp_oracle.py [url] [subject] [message] [from]")
