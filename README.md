@@ -51,8 +51,8 @@ Add the following line to it:
 ## How to use
 
 - Add both vuln_email.php and mail.css to your /var/www/html directory
-- Change FROM_EMAIL and FROM_PWD in smtp_oracle.py to match yours
+- Change FROM_EMAIL and FROM_PWD in smtp_oracle.py to match yours (not needed anymore if you don't want to check the received email content by using the command line)
 - run the following command :
 
-python smtp_oracle.py :from :subject :message
+python smtp_oracle.py :url :from :subject :message
 
