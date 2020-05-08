@@ -54,5 +54,6 @@ Add the following line to it:
 - Change FROM_EMAIL and FROM_PWD in smtp_oracle.py to match yours (not needed anymore if you don't want to check the received email content by using the command line)
 - run the following command :
 
-python smtp_oracle.py :url :from :subject :message
+python smtp_oracle.py :url :subject :message :from
 
+Example: python smtp_oracle.py "http://localhost:80/smtp_target/vuln_email.php" "Mon sujet" "Salut" "destination@gmail.com"
